@@ -9,6 +9,7 @@ var username = null; // Our username
 var socket = new WebSocket('ws://' + window.location.host + '/ws');
 // This variable is set later, in the battle() function. It has to be initialized here so that other functions can have access to it.
 var inputter;
+
 socket.onmessage = function(e) {
   var msg = JSON.parse(e.data);
   console.log(msg)
@@ -21,6 +22,8 @@ socket.onmessage = function(e) {
 
 function handleChatMessage(msg) {
   if (msg.command == "START GAME") {
+    document.getElementById('ownName').innerHTML=username
+    document.getElementById('enemyName').innerHTML=msg.message
     battle();
     return;
   }
@@ -57,6 +60,12 @@ function join () {
     }
     document.getElementById("afterjoin").style.display = "block";
     document.getElementById("beforejoin").style.display = "none";
+    socket.send(
+      JSON.stringify({
+        username:username,
+        message: "",
+        command: "SETNAME"
+    }));
 }
 
 function toggleReady () {

@@ -20,6 +20,7 @@ type Message struct {
 
 // The two channels in this struct are for the player sending commands to the server and for the server sending gamestate updates to the player's computer.
 type User struct {
+	Name		 string
 	Ready            bool
 	InGame           bool
 	BattleInputChan  chan Message
@@ -71,7 +72,7 @@ func dispatcher(newClients <-chan ConnInfo) {
 		// When a new connection is established.
 		case newConn := <-newClients:
 			// Add them to the list.
-			user := User{false, false, make(chan Message), make(chan Update)}
+			user := User{"", false, false, make(chan Message), make(chan Update)}
 			clients[&newConn] = &user
 
 			// Merge their Messages ino the single messages channel.
@@ -109,6 +110,8 @@ func dispatcher(newClients <-chan ConnInfo) {
 					matchmaker(clients)
 				case "UNREADY":
 					msg.User.Ready = false
+				case "SETNAME":
+					msg.User.Name = msg.Message.Username
 				default:
 					log.Println("got unexpected message", msg.Message.Command, "from user", msg.Message.Username)
 				}
@@ -135,8 +138,8 @@ func matchmaker(clients map[*ConnInfo]*User) {
 		clients[readyUsers[0]].InGame = true
 		clients[readyUsers[1]].Ready = false
 		clients[readyUsers[1]].InGame = true
-		readyUsers[0].Outbound <- Message{Username: "", Content: "", Command: "START GAME"}
-		readyUsers[1].Outbound <- Message{Username: "", Content: "", Command: "START GAME"}
+		readyUsers[0].Outbound <- Message{Username: "", Content: clients[readyUsers[1]].Name, Command: "START GAME"}
+		readyUsers[1].Outbound <- Message{Username: "", Content: clients[readyUsers[0]].Name, Command: "START GAME"}
 		go battle(clients[readyUsers[0]].BattleInputChan, clients[readyUsers[1]].BattleInputChan, clients[readyUsers[0]].BattleUpdateChan, clients[readyUsers[1]].BattleUpdateChan)
 		go forwardUpdates(readyUsers[0].Outbound, clients[readyUsers[0]].BattleUpdateChan)
 		go forwardUpdates(readyUsers[1].Outbound, clients[readyUsers[1]].BattleUpdateChan)

@@ -18,7 +18,6 @@ import (
 // The StateDuration field shows how much longer the player will remain in their current state.
 // The Finished field shows what state the player just exited. It's used to know when an attack is supposed to land.
 type Player struct {
-	Name          string
 	InputChan     chan Message
 	UpdateChan    chan Update
 	Command       string
