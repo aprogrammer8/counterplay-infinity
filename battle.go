@@ -133,17 +133,15 @@ func battle(player1inputChan, player2inputChan chan Message, player1updateChan, 
 }
 
 func resolveState(player Player, enemy Player) (Player, Player) {
-	log.Println("test1")
 	switch player.Finished {
 	case "light attack":
-		log.Println("test2")
 		if enemy.State == "blocking" {
 			if enemy.Stamina >= LIGHT_ATK_BLK_COST {
 				enemy.Stamina -= LIGHT_ATK_BLK_COST
 				// If they haven't been blocking as long as the attack was in progress; that is, if they blocked reactively...
 				if -enemy.StateDuration < LIGHT_ATK_SPD {
 					// The player is counterattacked. They are placed in a stunned state that they must press a button to escape before the counterattack lands.
-					player.SetState("countered", -1)
+					player.SetState("countered", 0)
 					enemy.SetState("counterattack", LIGHT_ATK_CNTR_SPD)
 				}
 			} else {

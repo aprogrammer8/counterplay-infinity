@@ -94,7 +94,6 @@ func dispatcher(newClients <-chan ConnInfo) {
 		case msg := <-messages:
 			// If they're in a game, forward all messages there.
 			if msg.User.InGame {
-				log.Println(msg.Message)
 				if msg.Message.Command == "END MATCH" {
 					msg.User.InGame = false
 				} else {
