@@ -185,7 +185,7 @@ func resolveCommand(player Player, enemy Player, random *rand.Rand) (Player, Pla
 			player.SetState("blocking", 0)
 		}
 	case "DODGE":
-		// Dodges take time, unlike blocks which can be started at the last possible second.
+		// Dodges take time, unlike blocks which can be started at the last second.
 		if INTERRUPTABLE_STATES[player.State] && player.Stamina >= DODGE_COST && enemy.StateDuration > DODGE_WINDOW {
 			player.Stamina -= DODGE_COST
 			if ATTACK_STATES[enemy.State] {
