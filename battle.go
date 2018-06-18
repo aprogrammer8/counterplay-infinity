@@ -84,10 +84,10 @@ const DODGE_WINDOW int = 30
 
 //INTERRUPTABLE_STATES := map[string]bool{"standing":true,"blocking":true}
 //TERMINAL_STATES := map[string]bool{"standing":true,"blocking":true,"countered":true}
-var INTERRUPTABLE_STATES map[string]bool = map[string]bool{"standing": true, "blocking": true}
-var TERMINAL_STATES map[string]bool = map[string]bool{"standing": true, "blocking": true, "countered": true}
-var ATTACK_STATES map[string]bool = map[string]bool{"light attack": true, "heavy attack": true}
-var INTERRUPT_RESOLVE_KEYS []string = []string{"_up", "_down", "_left", "_right"}
+var INTERRUPTABLE_STATES = map[string]bool{"standing": true, "blocking": true}
+var TERMINAL_STATES = map[string]bool{"standing": true, "blocking": true, "countered": true}
+var ATTACK_STATES = map[string]bool{"light attack": true, "heavy attack": true}
+var INTERRUPT_RESOLVE_KEYS = []string{"_up", "_down", "_left", "_right"}
 
 func battle(player1inputChan, player2inputChan chan Message, player1updateChan, player2updateChan chan Update) {
 	log.Println("in battle")
@@ -95,25 +95,23 @@ func battle(player1inputChan, player2inputChan chan Message, player1updateChan, 
 	random := rand.New(rand.NewSource(time.Now().UnixNano()))
 	ticker := time.NewTicker(10 * time.Millisecond)
 	defer ticker.Stop()
-	players := []*Player{&Player{InputChan: player1inputChan, UpdateChan: player1updateChan, Command: "NONE", Life: 100, Stamina: 100, State: "standing", StateDuration: 0, Finished: ""}, &Player{InputChan: player2inputChan, UpdateChan: player2updateChan, Command: "NONE", Life: 100, Stamina: 100, State: "standing", StateDuration: 0, Finished: ""}}
+	players := []Player{Player{InputChan: player1inputChan, UpdateChan: player1updateChan, Command: "NONE", Life: 100, Stamina: 100, State: "standing", StateDuration: 0, Finished: ""}, Player{InputChan: player2inputChan, UpdateChan: player2updateChan, Command: "NONE", Life: 100, Stamina: 100, State: "standing", StateDuration: 0, Finished: ""}}
 	for players[0].Life > 0 && players[1].Life > 0 {
 		select {
 		// Each mainloop cycle:
 		case <-ticker.C:
 			players[0].UpdateChan <- Update{Self: players[0].Status(), Enemy: players[1].Status()}
 			players[1].UpdateChan <- Update{Self: players[1].Status(), Enemy: players[0].Status()}
-			for p, player := range players {
-				player.PassTime(1)
-				// Set the 'enemy' var to the other player, we'll need it later.
-				enemy := players[1]
-				if p == 1 {
-					enemy = players[0]
-				}
-				if player.Finished != "" {
-					resolveState(player, enemy)
-				}
-				resolveCommand(player, enemy, random)
+			players[0].PassTime(1)
+			players[1].PassTime(1)
+			if players[0].Finished != "" {
+				players[0], players[1] = resolveState(players[0], players[1])
 			}
+			if players[1].Finished != "" {
+				players[1], players[0] = resolveState(players[1], players[0])
+			}
+			players[0], players[1] = resolveCommand(players[0], players[1], random)
+			players[1], players[0] = resolveCommand(players[1], players[0], random)
 		case input := <-players[0].InputChan:
 			players[0].Command = input.Content
 		case input := <-players[1].InputChan:
@@ -134,9 +132,11 @@ func battle(player1inputChan, player2inputChan chan Message, player1updateChan, 
 	stop2 <- true
 }
 
-func resolveState(player *Player, enemy *Player) {
+func resolveState(player Player, enemy Player) (Player, Player) {
+	log.Println("test1")
 	switch player.Finished {
 	case "light attack":
+		log.Println("test2")
 		if enemy.State == "blocking" {
 			if enemy.Stamina >= LIGHT_ATK_BLK_COST {
 				enemy.Stamina -= LIGHT_ATK_BLK_COST
@@ -174,10 +174,10 @@ func resolveState(player *Player, enemy *Player) {
 		}
 	}
 	player.Finished = ""
-
+	return player, enemy
 }
 
-func resolveCommand(player *Player, enemy *Player, random *rand.Rand) {
+func resolveCommand(player Player, enemy Player, random *rand.Rand) (Player, Player) {
 	switch player.Command {
 	case "NONE":
 		if player.State == "blocking" {
@@ -240,6 +240,7 @@ func resolveCommand(player *Player, enemy *Player, random *rand.Rand) {
 	if player.Command != "BLOCK" {
 		player.Command = "NONE"
 	}
+	return player, enemy
 }
 
 func catchInput(channel chan Message, stopChan chan bool) {
