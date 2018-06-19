@@ -9,6 +9,15 @@ There are currently five controls in the game: a light attack (mapped to q), a h
 - The block is instant and costs no stamina by itself, but it can only be used if you are in an interruptable state (not doing an attack).
 - The dodge takes time to happen, costs the same amount of stamina regardless of what you dodge, and still requires you to be in a interruptable state.
 
+The Icons
+=========
+- A shield symbol under your state duration bar means you are blocking.
+- A spear symbol means you are doing a light attack.
+- A sword symbol means a heavy attack.
+- A shield on the left and a spear to the right of it means you're countering a light attack.
+- A spear on the left and a shield to the right of it means your light attack is being countered.
+- A sword symbol or spear symbol with an arrow next to it means you either had your heavy attack interrupted or are interrupting the enemy's heavy attack, depending on which symbol is on whose side. The arrow is the one you must press to resolve the interrupt in your favor.
+
 The Stats
 =========
 - Both players start with 100 life and 100 stamina.
