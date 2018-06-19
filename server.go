@@ -182,7 +182,7 @@ func handleConnection(newClients chan<- ConnInfo) http.Handler {
 		var msg Message
 		for {
 			// Read the next message from chat
-			socket.ReadJSON(&msg)
+			err := socket.ReadJSON(&msg)
 			if err != nil {
 				log.Printf("error: %v", err)
 				return
