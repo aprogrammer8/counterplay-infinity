@@ -69,8 +69,8 @@ function join () {
 }
 
 function toggleReady () {
-    console.log("(Un)readying for game...");
     readyStatus = document.getElementById("readybutton").innerHTML;
+    console.log("(Un)readying for game...");
     if (readyStatus.search("Unready for game")==-1) {
         var command = "READY";
         document.getElementById("readybutton").innerHTML="Unready for game";
@@ -93,6 +93,16 @@ function enter (event) {
     }
 }
 
+function toggleInstructions () {
+	element=document.getElementById("instructions")
+	console.log(element.style.display)
+	if (element.style.display=="none") {
+		element.style.display="block"
+	} else {
+		element.style.display="none"
+	}
+	element.scrollTop = element.scrollHeight; // Auto scroll to the bottom
+}
 
 function handleBattleUpdate(update) {
   if (update.self.life<=0 || update.enemy.life<=0) {
