@@ -69,14 +69,14 @@ function join () {
 }
 
 function toggleReady () {
-    readyStatus = document.getElementById("readybutton").innerHTML;
+    readyStatus = document.getElementById("readyButton").innerHTML;
     console.log("(Un)readying for game...");
     if (readyStatus.search("Unready for game")==-1) {
         var command = "READY";
-        document.getElementById("readybutton").innerHTML="Unready for game";
+        document.getElementById("readyButton").innerHTML="Unready for game";
     } else {
         var command = "UNREADY";
-        document.getElementById("readybutton").innerHTML="Ready for game";
+        document.getElementById("readyButton").innerHTML="Ready for game";
     }
     socket.send(
         JSON.stringify({
@@ -197,7 +197,7 @@ function handleBattleUpdate(update) {
 
 
 function battle () {
-  document.getElementById("readybutton").innerHTML="Ready for game";
+  document.getElementById("readyButton").innerHTML="Ready for game";
   document.getElementById('chat').style.display="none"
   document.getElementById('battleUI').style.display="block"
   // should probably play a sound to notify the user when they get matched
