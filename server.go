@@ -112,6 +112,22 @@ func dispatcher(newClients <-chan ConnInfo) {
 					msg.User.Ready = false
 				case "SETNAME":
 					msg.User.Name = msg.Message.Username
+				case "BOT MATCH":
+					// Find the ConnInfo in the clients map, because msg.User doesn't contain it.
+					var conn *ConnInfo
+					for conn = range clients {
+						if clients[conn]==msg.User {
+							break
+						}
+					}
+					msg.User.Ready = false
+					msg.User.InGame = true
+					botInputChan:=make(chan Message)
+					botUpdateChan:=make(chan Update)
+					conn.Outbound <- Message{Username: "", Content: msg.Message.Content, Command: "START GAME"}
+					go AttackBot(botInputChan,botUpdateChan)
+					go battle(msg.User.BattleInputChan, botInputChan, msg.User.BattleUpdateChan, botUpdateChan)
+					go forwardUpdates(conn.Outbound, msg.User.BattleUpdateChan)
 				default:
 					log.Println("got unexpected message", msg.Message.Command, "from user", msg.Message.Username)
 				}
