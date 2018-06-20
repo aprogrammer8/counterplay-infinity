@@ -24,12 +24,31 @@ function handleChatMessage(msg) {
     document.getElementById('ownName').innerHTML=username
     document.getElementById('enemyName').innerHTML=msg.message
     document.getElementById("matchSound").play()
-    document.getElementById("readyButton").innerHTML="Ready for game";
+    document.getElementById("readyButton").innerHTML="Ready for game"
     document.getElementById('chat').style.display="none"
     document.getElementById('battleUI').style.display="block"
     document.getElementById("getReadyText").style.display="block"
-    setTimeout(battle,5000);
-    return;
+    setTimeout(function(){
+      setTimeout(function(){
+        setTimeout(function(){
+          setTimeout(function(){
+            document.getElementById("getReadyText").innerHTML="Get ready!"
+            document.getElementById("getReadyText").style.display="none"
+            document.getElementById("startSound").play()
+            battle()
+          },1000)
+          document.getElementById("getReadyText").innerHTML="1..."
+          document.getElementById("countdownSound").fastSeek(0)
+          document.getElementById("countdownSound").play()
+        },1000)
+        document.getElementById("getReadyText").innerHTML="2..."
+        document.getElementById("countdownSound").fastSeek(0)
+        document.getElementById("countdownSound").play()
+      },1000)
+      document.getElementById("getReadyText").innerHTML="3..."
+      document.getElementById("countdownSound").play()
+    },1000)
+    return
   }
   chatContent += '<div class="chip">'
    + msg.username
@@ -201,8 +220,6 @@ function handleBattleUpdate(update) {
 
 
 function battle () {
-  document.getElementById("getReadyText").style.display="none"
-  document.getElementById("matchSound").play()
   var input = "NONE"
   document.addEventListener('keyup', function(e) {
     if (e.keyCode == 32) {
