@@ -12,7 +12,6 @@ var inputter;
 
 socket.onmessage = function(e) {
   var msg = JSON.parse(e.data);
-  console.log(msg)
   if (msg.hasOwnProperty('message')) {
     handleChatMessage(msg)
   } else {
@@ -197,10 +196,10 @@ function handleBattleUpdate(update) {
 
 
 function battle () {
+  document.getElementById("matchSound").play()
   document.getElementById("readyButton").innerHTML="Ready for game";
   document.getElementById('chat').style.display="none"
   document.getElementById('battleUI').style.display="block"
-  // should probably play a sound to notify the user when they get matched
   var input = "NONE"
   document.addEventListener('keyup', function(e) {
     if (e.keyCode == 32) {
@@ -243,7 +242,6 @@ function battle () {
   });
 
   function sendUpdate () {
-    console.log("sending input to server")
     socket.send(JSON.stringify({
     "username":username,
     "message":input,
