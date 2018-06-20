@@ -23,7 +23,12 @@ function handleChatMessage(msg) {
   if (msg.command == "START GAME") {
     document.getElementById('ownName').innerHTML=username
     document.getElementById('enemyName').innerHTML=msg.message
-    battle();
+    document.getElementById("matchSound").play()
+    document.getElementById("readyButton").innerHTML="Ready for game";
+    document.getElementById('chat').style.display="none"
+    document.getElementById('battleUI').style.display="block"
+    document.getElementById("getReadyText").style.display="block"
+    setTimeout(battle,5000);
     return;
   }
   chatContent += '<div class="chip">'
@@ -196,10 +201,8 @@ function handleBattleUpdate(update) {
 
 
 function battle () {
+  document.getElementById("getReadyText").style.display="none"
   document.getElementById("matchSound").play()
-  document.getElementById("readyButton").innerHTML="Ready for game";
-  document.getElementById('chat').style.display="none"
-  document.getElementById('battleUI').style.display="block"
   var input = "NONE"
   document.addEventListener('keyup', function(e) {
     if (e.keyCode == 32) {

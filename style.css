@@ -37,6 +37,9 @@ main {
 #enemyName {
     text-align:center;
 }
+#getReadyText {
+    text-align:center;
+}
 
 #battleUI {
     display: none;
