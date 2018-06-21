@@ -233,7 +233,7 @@ func resolveCommand(player Player, enemy Player, random *rand.Rand) (Player, Pla
 			} else {
 				// Same as above only this time we hit the wrong button, so the condition is reversed - we take damage if we're the interrupting player.
 				if strings.HasPrefix(player.State, "interrupting") {
-					enemy.Life -= HEAVY_ATK_DMG
+					player.Life -= HEAVY_ATK_DMG
 				}
 			}
 			player.SetState("standing", 0)

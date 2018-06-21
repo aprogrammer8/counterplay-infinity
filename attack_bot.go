@@ -7,7 +7,7 @@ import (
 )
 
 func AttackBot(inputChan chan Message, updateChan chan Update) {
-	time.Sleep(3500 * time.Millisecond)
+	time.Sleep(4500 * time.Millisecond)
 	random := rand.New(rand.NewSource(time.Now().UnixNano()))
 	update := <- updateChan
 	input := "NONE"

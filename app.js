@@ -199,10 +199,17 @@ function handleBattleUpdate(update) {
       document.getElementById('ownBlockSymbol').style.display="inline-block"
       break;
     default:
-//      if (ownState.search("interrupt")==0) {
-      arrow=ownState.slice(ownState.indexOf("_")+1,ownState.length)
-      document.getElementById('ownHeavySymbol').style.display="inline-block"
-      document.getElementById(arrow+'ArrowSymbol').style.display="inline-block"
+      // If we're the heavy attack player
+      if (ownState.search("interrupted")==0) {
+        arrow=ownState.slice(ownState.indexOf("_")+1,ownState.length)
+        document.getElementById('ownHeavySymbol').style.display="inline-block"
+        document.getElementById(arrow+'ArrowSymbol').style.display="inline-block"
+      } else {
+        arrow=ownState.slice(ownState.indexOf("_")+1,ownState.length)
+        document.getElementById('ownLightSymbol').style.display="inline-block"
+        document.getElementById(arrow+'ArrowSymbol').style.display="inline-block"
+      }
+
   }
   switch (enemyState) {
     case "standing":
@@ -225,7 +232,11 @@ function handleBattleUpdate(update) {
       document.getElementById('enemyBlockSymbol').style.display="inline-block"
       break;
     default:
-      document.getElementById('enemyLightSymbol').style.display="inline-block"
+      if (ownState.search("interrupted")==0) {
+        document.getElementById('enemyLightSymbol').style.display="inline-block"
+      } else {
+        document.getElementById('enemyHeavySymbol').style.display="inline-block"
+      }
   }
 };
 
