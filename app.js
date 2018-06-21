@@ -116,6 +116,17 @@ function enter (event) {
     }
 }
 
+function fightBot() {
+	// TODO check the dropdown menu (which doesn't exist yet) to see which bot is selected
+	socket.send(
+	  JSON.stringify({
+	    username:username,
+	    message: "AttackBot",
+	    command: "BOT MATCH"
+	  })
+	);
+}
+
 function toggleInstructions () {
 	element=document.getElementById("instructions")
 	console.log(element.style.display)
