@@ -99,8 +99,14 @@ func battle(player1inputChan, player2inputChan chan Message, player1updateChan, 
 		select {
 		// Each mainloop cycle:
 		case <-ticker.C:
-			players[0].UpdateChan <- Update{Self: players[0].Status(), Enemy: players[1].Status()}
-			players[1].UpdateChan <- Update{Self: players[1].Status(), Enemy: players[0].Status()}
+			select {
+			case players[0].UpdateChan <- Update{Self: players[0].Status(), Enemy: players[1].Status()}:
+			default:
+			}
+			select {
+			case players[1].UpdateChan <- Update{Self: players[1].Status(), Enemy: players[0].Status()}:
+			default:
+			}
 			players[0].PassTime(1)
 			players[1].PassTime(1)
 			if players[0].Finished != "" {

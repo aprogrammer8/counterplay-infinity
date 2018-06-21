@@ -20,7 +20,7 @@ type Message struct {
 
 // The two channels in this struct are for the player sending commands to the server and for the server sending gamestate updates to the player's computer.
 type User struct {
-	Name		 string
+	Name             string
 	Ready            bool
 	InGame           bool
 	BattleInputChan  chan Message
@@ -113,7 +113,7 @@ func dispatcher(newClients <-chan ConnInfo) {
 				case "SETNAME":
 					msg.User.Name = msg.Message.Username
 				default:
-					log.Println("got unexpected message", msg.Message.Command, "from user", msg.Message.Username)
+					log.Println("got unexpected command message", msg.Message.Command, "from user", msg.Message.Username)
 				}
 				// Handle lobby chat messages.
 			} else {
@@ -170,7 +170,7 @@ func handleConnection(newClients chan<- ConnInfo) http.Handler {
 		// Connect the outbound channel to the websocket.
 		go func() {
 			for msg := range conn.Outbound {
-				var err = socket.WriteJSON(msg)
+				err := socket.WriteJSON(msg)
 				if err != nil {
 					log.Println(err)
 				}
@@ -196,6 +196,15 @@ func handleConnection(newClients chan<- ConnInfo) http.Handler {
 func forwardUpdates(dest chan interface{}, src chan Update) {
 	for update := range src {
 		dest <- update
+		// This function is here to prevent crashes when someone reloads during battle
+		defer func() {
+			// recover from panic caused by writing to a closed channel
+			r := recover()
+			if r != nil {
+				log.Printf("write: error writing on channel: %v\n", r)
+				return
+			}
+		}()
 		if update.Self.Life <= 0 || update.Enemy.Life <= 0 {
 			return
 		}
