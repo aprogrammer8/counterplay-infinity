@@ -120,10 +120,15 @@ main {
 
 #ownState {
   float: left;
+  width: 98%;
+  text-align: right;
 }
 #enemyState {
   float: right;
+  width: 98%;
 }
-#ResolutionArrows {
+#resolutionArrows {
   float: left;
+  text-align: right;
+  width: 98%;
 }
