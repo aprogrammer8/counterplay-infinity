@@ -125,7 +125,12 @@ func dispatcher(newClients <-chan ConnInfo) {
 					botInputChan:=make(chan Message)
 					botUpdateChan:=make(chan Update)
 					conn.Outbound <- Message{Username: "", Content: msg.Message.Content, Command: "START GAME"}
-					go AttackBot(botInputChan,botUpdateChan)
+					switch msg.Message.Content {
+					case "AttackBot":
+						go AttackBot(botInputChan,botUpdateChan)
+					default:
+						log.Println("unrecognized bot",msg.Message.Content)
+					}
 					go battle(msg.User.BattleInputChan, botInputChan, msg.User.BattleUpdateChan, botUpdateChan)
 					go forwardUpdates(conn.Outbound, msg.User.BattleUpdateChan)
 				default:

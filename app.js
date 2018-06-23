@@ -117,11 +117,10 @@ function enter (event) {
 }
 
 function fightBot() {
-	// TODO check the dropdown menu (which doesn't exist yet) to see which bot is selected
 	socket.send(
 	  JSON.stringify({
 	    username:username,
-	    message: "AttackBot",
+	    message: document.getElementById("botMenu").value,
 	    command: "BOT MATCH"
 	  })
 	);
