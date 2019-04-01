@@ -6,9 +6,10 @@
 package main
 
 import (
-	"github.com/gorilla/websocket"
 	"log"
 	"net/http"
+
+	"github.com/gorilla/websocket"
 )
 
 // Messages are the JSON objects used for most communication between clients and the server. In the case of a chat message, Content will be used and Command will be left blank. In the context of a special message, Command will be used and Content will be left blank.
@@ -116,20 +117,20 @@ func dispatcher(newClients <-chan ConnInfo) {
 					// Find the ConnInfo in the clients map, because msg.User doesn't contain it.
 					var conn *ConnInfo
 					for conn = range clients {
-						if clients[conn]==msg.User {
+						if clients[conn] == msg.User {
 							break
 						}
 					}
 					msg.User.Ready = false
 					msg.User.InGame = true
-					botInputChan:=make(chan Message)
-					botUpdateChan:=make(chan Update)
+					botInputChan := make(chan Message)
+					botUpdateChan := make(chan Update)
 					conn.Outbound <- Message{Username: "", Content: msg.Message.Content, Command: "START GAME"}
 					switch msg.Message.Content {
 					case "AttackBot":
-						go AttackBot(botInputChan,botUpdateChan)
+						go AttackBot(botInputChan, botUpdateChan)
 					default:
-						log.Println("unrecognized bot",msg.Message.Content)
+						log.Println("unrecognized bot", msg.Message.Content)
 					}
 					go battle(msg.User.BattleInputChan, botInputChan, msg.User.BattleUpdateChan, botUpdateChan)
 					go forwardUpdates(conn.Outbound, msg.User.BattleUpdateChan)

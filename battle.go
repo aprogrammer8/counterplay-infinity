@@ -12,30 +12,28 @@ import (
 	"time"
 )
 
-// These two channels are the same as the two from the corresponding User struct in server.go.
-// The Command field is the current input from the player (kept up to date by the concurrently running input func for the player).
-// The state field keeps track of what the player is doing. It has values like "standing", "blocking", "light attack", etc.
-// The StateDuration field shows how much longer the player will remain in their current state.
-// The Finished field shows what state the player just exited. It's used to know when an attack is supposed to land.
 type Player struct {
-	InputChan     chan Message
-	UpdateChan    chan Update
-	Command       string
-	Life          int
-	Stamina       float32
-	State         string
+	// These two channels are the same as the two from the corresponding User struct in server.go.
+	InputChan  chan Message
+	UpdateChan chan Update
+	// The Command field is the current input from the player (kept up to date by the concurrently running input func for the player).
+	Command string
+	Life    int
+	Stamina float32
+	// The State field keeps track of what the player is doing. It has values like "standing", "blocking", "light attack", etc.
+	State string
+	// The StateDuration field shows how much longer the player will remain in their current state.
 	StateDuration int
-	Finished      string
+	// The Finished field shows what state the player just exited. It's used to know when an attack is supposed to land.
+	Finished string
 }
 
-// This struct is passed instead of Player to the client in Updates so that unneeded fields like the channels aren't passed.
-type PlayerStatus struct {
-	Life          int     `json:"life"`
-	Stamina       float32 `json:"stamina"`
-	State         string  `json:"state"`
-	StateDuration int     `json:"stateDur"`
+// NewPlayer returns a Player with all the starting values.
+func NewPlayer(inputChan chan Message, updateChan chan Update) Player {
+	return Player{InputChan: inputChan, UpdateChan: updateChan, Command: "NONE", Life: 100, Stamina: 100, State: "standing", StateDuration: 0, Finished: ""}
 }
 
+// Status returns a PlayerStatus from the Player, to be sent in an Update over the network.
 func (p *Player) Status() PlayerStatus {
 	return PlayerStatus{Life: p.Life, Stamina: p.Stamina, State: p.State, StateDuration: p.StateDuration}
 
@@ -60,13 +58,21 @@ func (p *Player) SetState(state string, duration int) {
 	p.StateDuration = duration
 }
 
+// This struct is passed instead of Player to the client in Updates so that unneeded fields like the channels aren't passed.
+type PlayerStatus struct {
+	Life          int     `json:"life"`
+	Stamina       float32 `json:"stamina"`
+	State         string  `json:"state"`
+	StateDuration int     `json:"stateDur"`
+}
+
 // One of these is sent back to each player every mainloop cycle. Note that the players don't know which player they are internally - it doesn't matter.
 type Update struct {
 	Self  PlayerStatus `json:"self"`
 	Enemy PlayerStatus `json:"enemy"`
 }
 
-// constants
+// Constants.
 const LIGHT_ATK_DMG int = 3
 const LIGHT_ATK_SPD int = 50
 const LIGHT_ATK_COST float32 = 10.0
@@ -81,11 +87,11 @@ const HEAVY_ATK_BLKED_DMG int = 2
 const DODGE_COST float32 = 20.0
 const DODGE_WINDOW int = 30
 
-//INTERRUPTABLE_STATES := map[string]bool{"standing":true,"blocking":true}
-//TERMINAL_STATES := map[string]bool{"standing":true,"blocking":true,"countered":true}
 var INTERRUPTABLE_STATES = map[string]bool{"standing": true, "blocking": true}
 var TERMINAL_STATES = map[string]bool{"standing": true, "blocking": true, "countered": true}
 var ATTACK_STATES = map[string]bool{"light attack": true, "heavy attack": true}
+
+// These are suffixes that can be attached to 'interrupt' or 'interrupting' to form the a state value that includes which arrow needs to be pressed.
 var INTERRUPT_RESOLVE_KEYS = []string{"_up", "_down", "_left", "_right"}
 
 func battle(player1inputChan, player2inputChan chan Message, player1updateChan, player2updateChan chan Update) {
@@ -94,11 +100,12 @@ func battle(player1inputChan, player2inputChan chan Message, player1updateChan, 
 	random := rand.New(rand.NewSource(time.Now().UnixNano()))
 	ticker := time.NewTicker(10 * time.Millisecond)
 	defer ticker.Stop()
-	players := []Player{Player{InputChan: player1inputChan, UpdateChan: player1updateChan, Command: "NONE", Life: 100, Stamina: 100, State: "standing", StateDuration: 0, Finished: ""}, Player{InputChan: player2inputChan, UpdateChan: player2updateChan, Command: "NONE", Life: 100, Stamina: 100, State: "standing", StateDuration: 0, Finished: ""}}
+	players := []Player{NewPlayer(player1inputChan, player1updateChan), NewPlayer(player2inputChan, player2updateChan)}
 	for players[0].Life > 0 && players[1].Life > 0 {
 		select {
 		// Each mainloop cycle:
 		case <-ticker.C:
+			// Send updates to the clients.
 			select {
 			case players[0].UpdateChan <- Update{Self: players[0].Status(), Enemy: players[1].Status()}:
 			default:
@@ -137,7 +144,7 @@ func battle(player1inputChan, player2inputChan chan Message, player1updateChan, 
 	stop2 <- true
 }
 
-func resolveState(player Player, enemy Player) (Player, Player) {
+func resolveState(player, enemy Player) (Player, Player) {
 	switch player.Finished {
 	case "light attack":
 		if enemy.State == "blocking" {
@@ -180,7 +187,7 @@ func resolveState(player Player, enemy Player) (Player, Player) {
 	return player, enemy
 }
 
-func resolveCommand(player Player, enemy Player, random *rand.Rand) (Player, Player) {
+func resolveCommand(player, enemy Player, random *rand.Rand) (Player, Player) {
 	switch player.Command {
 	case "NONE":
 		if player.State == "blocking" {
