@@ -23,6 +23,14 @@ func TestResolveState(t *testing.T) {
 	assert.Equal(t, newp1, NewPlayer(nil, nil))
 	assert.Equal(t, newp2, Player{nil, nil, "NONE", 100 - LIGHT_ATK_DMG, 100.0, "standing", 0, ""})
 
+	// Test light attack canceling light attack
+	p1.Finished = "light attack"
+	p2.SetState("light attack", 5)
+	newp1, newp2 = resolveState(p1, p2)
+	assert.Equal(t, newp1, NewPlayer(nil, nil))
+	assert.Equal(t, newp2, Player{nil, nil, "NONE", 100 - LIGHT_ATK_DMG, 100.0, "standing", 0, ""})
+	p2 = NewPlayer(nil, nil)
+
 	// Test light attack against a preemptive block
 	p2.SetState("blocking", -LIGHT_ATK_SPD)
 	p1.Finished = "light attack"

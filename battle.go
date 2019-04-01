@@ -162,8 +162,11 @@ func resolveState(player, enemy Player) (Player, Player) {
 				enemy.Life -= LIGHT_ATK_DMG
 			}
 		} else {
-			// If the enemy wasn't blocking, they just take damage.
+			// If the enemy wasn't blocking, they just take damage and have their light attack canceled.
 			enemy.Life -= LIGHT_ATK_DMG
+			if enemy.State == "light attack" {
+				enemy.SetState("standing", 0)
+			}
 		}
 	case "counterattack":
 		// No conditions here because if you dodge the counter attack it puts the enemy out of the counterattacking state.
