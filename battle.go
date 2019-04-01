@@ -47,7 +47,7 @@ func (p *Player) PassTime(amount int) {
 	}
 	p.StateDuration -= amount
 	// If it starts with "interrupt", it's one of the heavy attack interrupt states. There are eight of them, so I didn't think it was practical to just list them all.
-	if p.StateDuration <= 0 && !INTERRUPTABLE_STATES[p.State] && !strings.HasPrefix(p.State, "interrupt") {
+	if p.StateDuration <= 0 && !TERMINAL_STATES[p.State] && !strings.HasPrefix(p.State, "interrupt") {
 		p.Finished = p.State
 		p.State = "standing"
 	}
@@ -100,7 +100,6 @@ var ATTACK_STATES = map[string]bool{"light attack": true, "heavy attack": true}
 var INTERRUPT_RESOLVE_KEYS = []string{"_up", "_down", "_left", "_right"}
 
 func battle(player1inputChan, player2inputChan chan Message, player1updateChan, player2updateChan chan Update) {
-	log.Println("in battle")
 	// Seed the random number generator and initialize the clock and players.
 	random := rand.New(rand.NewSource(time.Now().UnixNano()))
 	ticker := time.NewTicker(10 * time.Millisecond)
