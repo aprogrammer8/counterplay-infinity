@@ -31,16 +31,16 @@ func TestResolveState(t *testing.T) {
 	assert.Equal(t, newp2, Player{nil, nil, "NONE", 100 - LIGHT_ATK_DMG, 100.0, "standing", 0, ""})
 	p2 = NewPlayer(nil, nil)
 
-	// Test light attack against a preemptive block
-	p2.SetState("blocking", -LIGHT_ATK_SPD)
+	// Test light attack against a block too slow to counter
+	p2.SetState("blocking", -1)
 	p1.Finished = "light attack"
 	newp1, newp2 = resolveState(p1, p2)
 	assert.Equal(t, newp1, NewPlayer(nil, nil))
-	assert.Equal(t, newp2, Player{nil, nil, "NONE", 100, 100.0 - LIGHT_ATK_BLK_COST, "blocking", -LIGHT_ATK_SPD, ""})
+	assert.Equal(t, newp2, Player{nil, nil, "NONE", 100, 100.0 - LIGHT_ATK_BLK_COST, "blocking", -1, ""})
 	p2 = NewPlayer(nil, nil)
 
-	// Test light attack against a reactive block
-	p2.SetState("blocking", -49)
+	// Test light attack against a block fast enough to counter
+	p2.SetState("blocking", -(LIGHT_ATK_SPD - LIGHT_ATK_CNTR_WINDOW))
 	p1.Finished = "light attack"
 	newp1, newp2 = resolveState(p1, p2)
 	assert.Equal(t, newp1, Player{nil, nil, "NONE", 100, 100.0, "countered", 0, ""})
@@ -147,13 +147,13 @@ func testResolveCommand(t *testing.T) {
 
 	// Test dodging: too slow
 	p1.SetState("standing", 0)
-	p2.SetState("light attack", DODGE_WINDOW-1)
+	p2.SetState("light attack", DODGE_SPD-1)
 	assert.Equal(t, newp1, NewPlayer(nil, nil))
-	assert.Equal(t, newp2, Player{nil, nil, "NONE", 100, 100.0, "light attack", DODGE_WINDOW - 1, ""})
+	assert.Equal(t, newp2, Player{nil, nil, "NONE", 100, 100.0, "light attack", DODGE_SPD - 1, ""})
 
 	// Test dodging: in time
 	p1.SetState("standing", 0)
-	p2.SetState("light attack", DODGE_WINDOW)
+	p2.SetState("light attack", DODGE_SPD)
 	assert.Equal(t, newp1, NewPlayer(nil, nil))
 	assert.Equal(t, newp2, NewPlayer(nil, nil))
 }

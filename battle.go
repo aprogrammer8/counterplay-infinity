@@ -72,20 +72,25 @@ type Update struct {
 	Enemy PlayerStatus `json:"enemy"`
 }
 
-// Constants.
-const LIGHT_ATK_DMG int = 3
-const LIGHT_ATK_SPD int = 50
-const LIGHT_ATK_COST float32 = 10.0
-const LIGHT_ATK_BLK_COST float32 = 12.0
-const LIGHT_ATK_CNTR_SPD int = 30
-const LIGHT_ATK_CNTR_DMG int = 3
-const HEAVY_ATK_DMG int = 6
-const HEAVY_ATK_SPD int = 100
-const HEAVY_ATK_COST float32 = 15.0
-const HEAVY_ATK_BLK_COST float32 = 20.0
-const HEAVY_ATK_BLKED_DMG int = 2
-const DODGE_COST float32 = 20.0
-const DODGE_WINDOW int = 30
+// Balance parameters.
+const(
+	LIGHT_ATK_DMG int = 3
+	// 'Speed' here actually means how long it takes, so it's misleading.
+	LIGHT_ATK_SPD int = 50
+	LIGHT_ATK_COST float32 = 10.0
+	LIGHT_ATK_BLK_COST float32 = 12.0
+	// The counter window is how long you can counter for after the attacks starts - so a bigger value here means it's easier to counter.
+	LIGHT_ATK_CNTR_WINDOW int = 25
+	LIGHT_ATK_CNTR_SPD int = 30
+	LIGHT_ATK_CNTR_DMG int = 3
+	HEAVY_ATK_DMG int = 6
+	HEAVY_ATK_SPD int = 100
+	HEAVY_ATK_COST float32 = 15.0
+	HEAVY_ATK_BLK_COST float32 = 20.0
+	HEAVY_ATK_BLKED_DMG int = 2
+	DODGE_COST float32 = 20.0
+	DODGE_SPD int = 30
+)
 
 var INTERRUPTABLE_STATES = map[string]bool{"standing": true, "blocking": true}
 var TERMINAL_STATES = map[string]bool{"standing": true, "blocking": true, "countered": true}
@@ -150,8 +155,8 @@ func resolveState(player, enemy Player) (Player, Player) {
 		if enemy.State == "blocking" {
 			if enemy.Stamina >= LIGHT_ATK_BLK_COST {
 				enemy.Stamina -= LIGHT_ATK_BLK_COST
-				// If they haven't been blocking as long as the attack was in progress; that is, if they blocked reactively...
-				if -enemy.StateDuration < LIGHT_ATK_SPD {
+				// If the enemy blocked inside the counterattack window...
+				if -enemy.StateDuration >= LIGHT_ATK_SPD - LIGHT_ATK_CNTR_WINDOW {
 					// The player is counterattacked. They are placed in a stunned state that they must press a button to escape before the counterattack lands.
 					player.SetState("countered", 0)
 					enemy.SetState("counterattack", LIGHT_ATK_CNTR_SPD)
@@ -202,7 +207,7 @@ func resolveCommand(player, enemy Player, random *rand.Rand) (Player, Player) {
 		}
 	case "DODGE":
 		// Dodges take time, unlike blocks which can be started at the last second.
-		if INTERRUPTABLE_STATES[player.State] && player.Stamina >= DODGE_COST && enemy.StateDuration > DODGE_WINDOW {
+		if INTERRUPTABLE_STATES[player.State] && player.Stamina >= DODGE_COST && enemy.StateDuration > DODGE_SPD {
 			player.Stamina -= DODGE_COST
 			if ATTACK_STATES[enemy.State] {
 				enemy.SetState("standing", 0)
