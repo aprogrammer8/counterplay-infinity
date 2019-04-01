@@ -91,7 +91,7 @@ var INTERRUPTABLE_STATES = map[string]bool{"standing": true, "blocking": true}
 var TERMINAL_STATES = map[string]bool{"standing": true, "blocking": true, "countered": true}
 var ATTACK_STATES = map[string]bool{"light attack": true, "heavy attack": true}
 
-// These are suffixes that can be attached to 'interrupt' or 'interrupting' to form the a state value that includes which arrow needs to be pressed.
+// These are suffixes that can be attached to 'interrupted heavy' or 'interrupting heavy' to form the a state value that includes which arrow needs to be pressed.
 var INTERRUPT_RESOLVE_KEYS = []string{"_up", "_down", "_left", "_right"}
 
 func battle(player1inputChan, player2inputChan chan Message, player1updateChan, player2updateChan chan Update) {
