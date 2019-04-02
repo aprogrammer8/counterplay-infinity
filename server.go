@@ -126,14 +126,14 @@ func dispatcher(newClients <-chan ConnInfo) {
 					botInputChan := make(chan Message)
 					botUpdateChan := make(chan Update)
 					conn.Outbound <- Message{Username: "", Content: msg.Message.Content, Command: "START GAME"}
-					switch msg.Message.Content {
-					case "AttackBot":
-						go AttackBot(botInputChan, botUpdateChan)
-					default:
+					botFunction := getBotByName(msg.Message.Content)
+					if botFunction == nil {
 						log.Println("unrecognized bot", msg.Message.Content)
+					} else {
+						go botFunction(botInputChan, botUpdateChan)
+						go battle(msg.User.BattleInputChan, botInputChan, msg.User.BattleUpdateChan, botUpdateChan)
+						go forwardUpdates(conn.Outbound, msg.User.BattleUpdateChan)
 					}
-					go battle(msg.User.BattleInputChan, botInputChan, msg.User.BattleUpdateChan, botUpdateChan)
-					go forwardUpdates(conn.Outbound, msg.User.BattleUpdateChan)
 				default:
 					log.Println("got unexpected command message", msg.Message.Command, "from user", msg.Message.Username)
 				}

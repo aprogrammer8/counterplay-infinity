@@ -291,5 +291,6 @@ function battle () {
       input = "NONE"
     }
   }
-  inputter = setInterval(sendUpdate,20)
+  // This interval has to be longer than the server's mainloop interval, otherwise updates will get lost.
+  inputter = setInterval(sendUpdate, 20)
 }
