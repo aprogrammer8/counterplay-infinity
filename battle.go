@@ -194,6 +194,26 @@ func resolveState(player, enemy Player) (Player, Player) {
 }
 
 func resolveCommand(player, enemy Player, random *rand.Rand) (Player, Player) {
+	// Interrupt resolution has to be handled first, otherwise non-arrow keys can't be punished.
+	if strings.HasPrefix(player.State, "interrupt") {
+		// Position 10 is just after the '_'.
+		// If we hit the right button:
+		if strings.HasPrefix(player.Command, "INTERRUPT_") && strings.ToLower(player.Command[10:]) == player.State[strings.Index(player.State, "_")+1:] {
+			// If we're not the interrupting player, we're the heavy attack player, so the heavy attack hits.
+			if !strings.HasPrefix(player.State, "interrupting") {
+				enemy.Life -= HEAVY_ATK_DMG
+			}
+		} else {
+			// Same as above only this time we hit the wrong button, so the condition is reversed - we take damage if we're the interrupting player.
+			if strings.HasPrefix(player.State, "interrupting") {
+				player.Life -= HEAVY_ATK_DMG
+			}
+		}
+		player.SetState("standing", 0)
+		enemy.SetState("standing", 0)
+		return player, enemy
+	}
+	// And now the normal commands.
 	switch player.Command {
 	case "NONE":
 		if player.State == "blocking" {
@@ -234,25 +254,8 @@ func resolveCommand(player, enemy Player, random *rand.Rand) (Player, Player) {
 			player.SetState("heavy attack", HEAVY_ATK_SPD)
 			player.Stamina -= HEAVY_ATK_COST
 		}
-	default:
-		if strings.HasPrefix(player.Command, "INTERRUPT_") && strings.HasPrefix(player.State, "interrupt") {
-			// Position 10 is just after the '_'.
-			// If we hit the right button:
-			if strings.ToLower(player.Command[10:]) == player.State[strings.Index(player.State, "_")+1:] {
-				// If we're not the interrupting player, we're the heavy attack player, so the heavy attack hits.
-				if !strings.HasPrefix(player.State, "interrupting") {
-					enemy.Life -= HEAVY_ATK_DMG
-				}
-			} else {
-				// Same as above only this time we hit the wrong button, so the condition is reversed - we take damage if we're the interrupting player.
-				if strings.HasPrefix(player.State, "interrupting") {
-					player.Life -= HEAVY_ATK_DMG
-				}
-			}
-			player.SetState("standing", 0)
-			enemy.SetState("standing", 0)
-		}
 	}
+	// Reset the command so it doesn't register again; except for blocking, because that would un-block the player.
 	if player.Command != "BLOCK" {
 		player.Command = "NONE"
 	}
