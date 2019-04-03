@@ -7,8 +7,20 @@ var newMsg = ''; // Holds new messages to be sent to the server
 var chatContent = ''; // A running list of chat messages displayed on the screen
 var username = null; // Our username
 var socket = new WebSocket('ws://' + window.location.host + '/ws');
-// This variable is set later, in the battle() function. It has to be initialized here so that other functions can have access to it.
-var inputter;
+// This variable is used later, but has to be global so it can persist.
+var keyCodes = {
+	32: "BLOCK", // space
+	81: "LIGHT", // q
+	87: "HEAVY", // w
+	16: "DODGE", // shift (either)
+	17: "SAVE", // ctrl (either)
+	37: "INTERRUPT_LEFT",
+	38: "INTERRUPT_UP",
+	39: "INTERRUPT_RIGHT",
+	40: "INTERRUPT_DOWN"
+};
+var keyStates = {"LIGHT": false, "HEAVY": false, "BLOCK": false, "DODGE": false, "SAVE": false, "INTERRUPT_UP": false, "INTERRUPT_DOWN": false, "INTERRUPT_LEFT": false, "INTERRUPT_RIGHT": false};
+
 
 socket.onmessage = function(e) {
 	var msg = JSON.parse(e.data);
@@ -132,6 +144,7 @@ function toggleInstructions () {
 
 // This function updates the battle UI.
 function handleBattleUpdate(update) {
+	// If the battle is over
 	if (update.self.life <= 0 || update.enemy.life <= 0) {
 		document.getElementById('battleUI').style.display = "none";
 		document.getElementById('chat').style.display = "block";
@@ -144,11 +157,12 @@ function handleBattleUpdate(update) {
 		element.innerHTML = chatContent;
 		element.scrollTop = element.scrollHeight;
 
-		clearInterval(inputter)
+		document.removeEventListener("keyup", keyupListener)
+		document.removeEventListener("keydown", keydownListener)
 		socket.send(JSON.stringify({
-			"username":username,
-			"message":"",
-			"command":"END MATCH"
+			"username": username,
+			"message": "",
+			"command": "END MATCH"
 		}));
 	}
 	document.getElementById('ownLife').style.width = update.self.life.toString() + "%";
@@ -234,58 +248,40 @@ function handleBattleUpdate(update) {
 };
 
 
-function battle () {
-	var input = "NONE"
-	document.addEventListener('keyup', function(e) {
-		if (e.keyCode == 32) {
-			input = "NONE";
-		}
+function sendUpdate (input) {
+	// Don't allow holding keys.
+	if (keyStates[input] == true) {
 		return
-	});
-	document.addEventListener('keydown', function(e) {
-		switch (e.keyCode) {
-			case 32: // space
-				input = "BLOCK";
-				return
-			case 81: // q
-				input = "LIGHT";
-				return
-			case 87: // w
-				input = "HEAVY";
-				return
-			case 37:
-				input = "INTERRUPT_LEFT";
-				return
-			case 38:
-				input = "INTERRUPT_UP";
-				return
-			case 39:
-				input = "INTERRUPT_RIGHT";
-				return
-			case 40:
-				input = "INTERRUPT_DOWN";
-				return
-		}
-		if (e.shiftKey) {
-			input = "DODGE";
-			return
-		}
-		if (e.ctrlKey) {
-			input = "SAVE";
-			return
-		}
-	});
+	}
+	socket.send(JSON.stringify({
+		"username": username,
+		"message": input,
+		"command": ""
+	}));
+}
 
-	function sendUpdate () {
-		socket.send(JSON.stringify({
-			"username": username,
-			"message": input,
-			"command": ""
-		}));
-		if (input != "BLOCK"){
-			input = "NONE";
+function keyupListener (e) {
+	var move = keyCodes[e.keyCode];
+	if (move) {
+		keyStates[move] = false;
+		// Since blocking is currently the only terminal state that is entered by choice, it's the only key we need to send a command for on keyup.
+		if (move == "BLOCK") {
+			sendUpdate("NONE");
 		}
 	}
-	// This interval has to be longer than the server's mainloop interval, otherwise updates will get lost.
-	inputter = setInterval(sendUpdate, 20);
+	return
+};
+
+function keydownListener (e) {
+	console.log(e);
+	move = keyCodes[e.keyCode];
+	if (move) {
+		sendUpdate(move);
+		keyStates[move] = true;
+	}
+}
+
+function battle () {
+	document.addEventListener('keyup', keyupListener);
+	document.addEventListener('keydown', keydownListener);
 }
