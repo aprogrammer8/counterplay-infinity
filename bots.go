@@ -17,8 +17,8 @@ func getBotByName(bot string) func(chan Message, chan Update) {
 		return nil
 	}
 }
-//var bots = map[string]*func(chan Message, chan Update) {"AttackBot": &AttackBot, "AttackBotSlow": &AttackBotSlow}
 
+//var bots = map[string]*func(chan Message, chan Update) {"AttackBot": &AttackBot, "AttackBotSlow": &AttackBotSlow}
 
 // AttackBot spams random attacks whenever it can.
 func AttackBot(inputChan chan Message, updateChan chan Update) {
@@ -31,7 +31,12 @@ func AttackBot(inputChan chan Message, updateChan chan Update) {
 	for update.Self.Life > 0 && update.Enemy.Life > 0 {
 		// It doesn't do any attacks unless it has enough stamina for a heavy, because otherwise it would get stuck spamming light attacks at low stamina.
 		if INTERRUPTABLE_STATES[update.Self.State] && update.Self.Stamina >= HEAVY_ATK_COST {
-			input = attacks[random.Intn(2)]
+			// Don't do light attacks into a prepared block.
+			if update.Enemy.State == "blocking" {
+				input = "HEAVY"
+			} else {
+				input = attacks[random.Intn(2)]
+			}
 			inputChan <- Message{Username: "AttackBot", Content: input, Command: ""}
 		}
 		update = <-updateChan
@@ -49,7 +54,12 @@ func AttackBotSlow(inputChan chan Message, updateChan chan Update) {
 	for update.Self.Life > 0 && update.Enemy.Life > 0 {
 		// It doesn't do any attacks unless it has enough stamina for a heavy, because otherwise it would get stuck spamming light attacks at low stamina.
 		if INTERRUPTABLE_STATES[update.Self.State] && update.Self.Stamina >= HEAVY_ATK_COST {
-			input = attacks[random.Intn(2)]
+			// Don't do light attacks into a prepared block.
+			if update.Enemy.State == "blocking" {
+				input = "HEAVY"
+			} else {
+				input = attacks[random.Intn(2)]
+			}
 			// Wait a small randomized delay before acting.
 			time.Sleep(time.Duration((200 + random.Intn(133))) * time.Millisecond)
 			inputChan <- Message{Username: "AttackBot", Content: input, Command: ""}
