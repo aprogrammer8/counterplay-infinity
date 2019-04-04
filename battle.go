@@ -168,9 +168,12 @@ func resolveState(player, enemy Player) (Player, Player) {
 				enemy.Life -= LIGHT_ATK_DMG
 			}
 		} else {
-			// If the enemy wasn't blocking, they just take damage and have their light attack canceled.
+			// If the enemy wasn't blocking, they just take damage and have their attack canceled.
 			enemy.Life -= LIGHT_ATK_DMG
-			if enemy.State == "light attack" {
+			// We cancel heavy attacks here too because if it was supposed to count as an interrupt,
+			// that would have happened at the resolveCommand stage. We only get here if someone
+			// starts a heavy attack into a in-progress light attack.
+			if enemy.State == "light attack" || enemy.State == "heavy attack" {
 				enemy.SetState("standing", 0)
 			}
 		}
