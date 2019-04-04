@@ -137,7 +137,8 @@ func battle(player1inputChan, player2inputChan chan Message, player1updateChan, 
 	players[0].UpdateChan <- Update{Self: players[0].Status(), Enemy: players[1].Status()}
 	players[1].UpdateChan <- Update{Self: players[1].Status(), Enemy: players[0].Status()}
 
-	// Make some goroutines to catch the last couple inputs from the players. This is necessary to stop server.go from getting stuck trying to send their input through after the battle is over.
+	// Make some goroutines to catch the last couple inputs from the players. This is necessary to stop
+	// server.go from getting stuck trying to send their input through after the battle is over.
 	stop1 := make(chan bool)
 	stop2 := make(chan bool)
 	go catchInput(players[0].InputChan, stop1)
@@ -155,12 +156,14 @@ func resolveState(player, enemy Player) (Player, Player) {
 				enemy.Stamina -= LIGHT_ATK_BLK_COST
 				// If the enemy blocked inside the counterattack window...
 				if -enemy.StateDuration >= LIGHT_ATK_SPD-LIGHT_ATK_CNTR_WINDOW {
-					// The player is counterattacked. They are placed in a stunned state that they must press a button to escape before the counterattack lands.
+					// The player is counterattacked. They are placed in a stunned state that they
+					// must press a button to escape before the counterattack lands.
 					player.SetState("countered", 0)
 					enemy.SetState("counterattack", LIGHT_ATK_CNTR_SPD)
 				}
 			} else {
-				// If you try to block an attack but you don't have enough stamina, you still lose your stamina and you also take damage.
+				// If you try to block an attack but you don't have enough stamina,
+				// you still lose your stamina and you also take damage.
 				enemy.Stamina = 0.0
 				enemy.Life -= LIGHT_ATK_DMG
 			}
@@ -172,7 +175,8 @@ func resolveState(player, enemy Player) (Player, Player) {
 			}
 		}
 	case "counterattack":
-		// No conditions here because if you dodge the counter attack it puts the enemy out of the counterattacking state.
+		// No conditions here because if you save against the counter attack it puts the enemy
+		// out of the counterattacking state (so if you're here then they must not have saved).
 		enemy.Life -= LIGHT_ATK_CNTR_DMG
 		enemy.SetState("standing", 0)
 	case "heavy attack":
@@ -196,10 +200,10 @@ func resolveState(player, enemy Player) (Player, Player) {
 func resolveCommand(player, enemy Player, random *rand.Rand) (Player, Player) {
 	// Interrupt resolution has to be handled first, otherwise non-arrow keys can't be punished.
 	if strings.HasPrefix(player.State, "interrupt") && player.Command != "NONE" {
-		// Position 10 is just after the '_'.
-		// If we hit the right button:
+		// If we hit the right button (position 10 is just after the '_'):
 		if strings.HasPrefix(player.Command, "INTERRUPT_") && strings.ToLower(player.Command[10:]) == player.State[strings.Index(player.State, "_")+1:] {
-			// If we're not the interrupting player, we're the heavy attack player, so the heavy attack hits.
+			// If we're not the interrupting player, we're the heavy
+			// attack player, so the heavy attack hits.
 			if !strings.HasPrefix(player.State, "interrupting") {
 				enemy.Life -= HEAVY_ATK_DMG
 			}
