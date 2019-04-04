@@ -1,4 +1,5 @@
-// This file contains bots, which are functions that spawned in goroutines for each battle against them. They connect with channels just like a player.
+// This file contains bots, which are functions spawned in goroutines for
+// each battle against them. They connect with channels just like a player.
 
 package main
 
@@ -18,8 +19,6 @@ func getBotByName(bot string) func(chan Message, chan Update) {
 	}
 }
 
-//var bots = map[string]*func(chan Message, chan Update) {"AttackBot": &AttackBot, "AttackBotSlow": &AttackBotSlow}
-
 // AttackBot spams random attacks whenever it can.
 func AttackBot(inputChan chan Message, updateChan chan Update) {
 	// Don't attack during the countdown.
@@ -29,7 +28,8 @@ func AttackBot(inputChan chan Message, updateChan chan Update) {
 	input := "NONE"
 	attacks := []string{"LIGHT", "HEAVY"}
 	for update.Self.Life > 0 && update.Enemy.Life > 0 {
-		// It doesn't do any attacks unless it has enough stamina for a heavy, because otherwise it would get stuck spamming light attacks at low stamina.
+		// It doesn't do any attacks unless it has enough stamina for a heavy,
+		// because otherwise it would get stuck spamming light attacks at low stamina.
 		if INTERRUPTABLE_STATES[update.Self.State] && update.Self.Stamina >= HEAVY_ATK_COST {
 			// Don't do light attacks into a prepared block.
 			if update.Enemy.State == "blocking" {
@@ -52,7 +52,8 @@ func AttackBotSlow(inputChan chan Message, updateChan chan Update) {
 	input := "NONE"
 	attacks := []string{"LIGHT", "HEAVY"}
 	for update.Self.Life > 0 && update.Enemy.Life > 0 {
-		// It doesn't do any attacks unless it has enough stamina for a heavy, because otherwise it would get stuck spamming light attacks at low stamina.
+		// It doesn't do any attacks unless it has enough stamina for a heavy,
+		// because otherwise it would get stuck spamming light attacks at low stamina.
 		if INTERRUPTABLE_STATES[update.Self.State] && update.Self.Stamina >= HEAVY_ATK_COST {
 			// Don't do light attacks into a prepared block.
 			if update.Enemy.State == "blocking" {

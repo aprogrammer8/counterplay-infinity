@@ -204,13 +204,19 @@ func resolveCommand(player, enemy Player, random *rand.Rand) (Player, Player) {
 				enemy.Life -= HEAVY_ATK_DMG
 			}
 		} else {
-			// Same as above only this time we hit the wrong button, so the condition is reversed - we take damage if we're the interrupting player.
+			// Same as above only this time we hit the wrong button, so the condition
+			// is reversed - we take damage if we're the interrupting player.
 			if strings.HasPrefix(player.State, "interrupting") {
 				player.Life -= HEAVY_ATK_DMG
 			}
 		}
 		player.SetState("standing", 0)
 		enemy.SetState("standing", 0)
+		// Reset the command so it doesn't register again; except for blocking,
+		// because that would un-block the player.
+		if player.Command != "BLOCK" {
+			player.Command = "NONE"
+		}
 		return player, enemy
 	}
 	// And now the normal commands.

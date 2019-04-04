@@ -12,19 +12,24 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-// Messages are the JSON objects used for most communication between clients and the server. In the case of a chat message, Content will be used and Command will be left blank. In the context of a special message, Command will be used and Content will be left blank.
+// Message is the JSON object used for most communication between clients and the server. In the case of a chat message,
+// Content will be used and Command will be left blank. In the context of a special message, Command will be used and
+// Content will be left blank.
 type Message struct {
 	Username string `json:"username"`
 	Content  string `json:"message"`
 	Command  string `json:"command"`
 }
 
-// The two channels in this struct are for the player sending commands to the server and for the server sending gamestate updates to the player's computer.
+// User is a connected player from the lobby server's perspective - it doesn't have any battle-specific fields.
+// The two channels are only used during battle.
 type User struct {
 	Name             string
 	Ready            bool
 	InGame           bool
+	// The User's input during battle.
 	BattleInputChan  chan Message
+	// The server's output to the user during battle.
 	BattleUpdateChan chan Update
 }
 
@@ -147,7 +152,8 @@ func dispatcher(newClients <-chan ConnInfo) {
 	}
 }
 
-// This function is called whenever a new player readies for battle. If at least two people are ready for battle, it matches two of them.
+// This function is called whenever a new player readies for battle.
+// If at least two people are ready, it matches two of them.
 func matchmaker(clients map[*ConnInfo]*User) {
 	readyUsers := make([]*ConnInfo, 0)
 	for socket, user := range clients {
@@ -168,7 +174,8 @@ func matchmaker(clients map[*ConnInfo]*User) {
 	}
 }
 
-// Each time a new user connects, a goroutine running the function that this one returns is created. It keeps track of the connection and sends chat data or game data back and forth.
+// Each time a new user connects, a goroutine running the function that this one returns is created.
+// It keeps track of the connection and sends chat data or game data back and forth.
 func handleConnection(newClients chan<- ConnInfo) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Upgrade initial GET request to a websocket
