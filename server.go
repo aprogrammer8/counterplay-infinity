@@ -24,11 +24,11 @@ type Message struct {
 // User is a connected player from the lobby server's perspective - it doesn't have any battle-specific fields.
 // The two channels are only used during battle.
 type User struct {
-	Name             string
-	Ready            bool
-	InGame           bool
+	Name   string
+	Ready  bool
+	InGame bool
 	// The User's input during battle.
-	BattleInputChan  chan Message
+	BattleInputChan chan Message
 	// The server's output to the user during battle.
 	BattleUpdateChan chan Update
 }

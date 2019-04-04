@@ -63,7 +63,7 @@ func AttackBotSlow(inputChan chan Message, updateChan chan Update) {
 			}
 			// Wait a small randomized delay before acting.
 			time.Sleep(time.Duration((200 + random.Intn(133))) * time.Millisecond)
-			inputChan <- Message{Username: "AttackBot", Content: input, Command: ""}
+			inputChan <- Message{Username: "AttackBotSlow", Content: input, Command: ""}
 		}
 		update = <-updateChan
 	}
