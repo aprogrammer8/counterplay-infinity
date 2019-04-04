@@ -195,7 +195,7 @@ func resolveState(player, enemy Player) (Player, Player) {
 
 func resolveCommand(player, enemy Player, random *rand.Rand) (Player, Player) {
 	// Interrupt resolution has to be handled first, otherwise non-arrow keys can't be punished.
-	if strings.HasPrefix(player.State, "interrupt") {
+	if strings.HasPrefix(player.State, "interrupt") && player.Command != "NONE" {
 		// Position 10 is just after the '_'.
 		// If we hit the right button:
 		if strings.HasPrefix(player.Command, "INTERRUPT_") && strings.ToLower(player.Command[10:]) == player.State[strings.Index(player.State, "_")+1:] {
