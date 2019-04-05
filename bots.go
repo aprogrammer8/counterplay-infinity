@@ -39,22 +39,23 @@ func AttackBot(inputChan chan Message, updateChan chan Update) {
 	// because that could cause it to auto-lose interrupt it initiates. We won't send a command if waitingState is
 	// set.
 	waitingState := ""
-	// This value doesn't count down; it's set when an interrupt occurs and the bot resolves it when the
-	// StateDuration exceeds this value.
-	var interruptResolveTimer int
+	// The time at which the bot will resolve the interrupt.
+	var interruptResolveTime time.Time
 	for update.Self.Life > 0 && update.Enemy.Life > 0 {
 		// Resolve interrupts after a while.
 		if strings.HasPrefix(update.Self.State, "interrupt") {
-			// If the interrupt just started, we need to decide how long to wait for and then stick with it.
+			// If the interrupt just started, set a new resolution time, so we don't insta-resolve the
+			// second interrupt.
 			if update.Self.StateDuration == 0 {
-				// From .5 to .75 seconds, since 1 cycle is a centisecond.
-				interruptResolveTimer = random.Intn(25) + 50
-			} else if -update.Self.StateDuration > interruptResolveTimer {
+				// From .5 to .75 seconds after now.
+				interruptResolveTime = time.Now().Add(
+					time.Duration(random.Intn(250)+500) * time.Second)
+			} else if time.Now().After(interruptResolveTime) {
 				inputChan <- Message{Username: "AttackBot",
 					Content: "INTERRUPT_" + getInterruptKey(update.Self.State)}
 			}
 		}
-		// It doesn't do any attacks unless it has enough stamina for a heavy,
+		// Now handle the neutral game. It doesn't do any attacks unless it has enough stamina for a heavy,
 		// because otherwise it would get stuck spamming light attacks at low stamina.
 		if INTERRUPTABLE_STATES[update.Self.State] && update.Self.Stamina >= HEAVY_ATK_COST && update.Self.State != waitingState {
 			// Don't send another command if we're still waiting for our state to change.
@@ -88,17 +89,19 @@ func AttackBotSlow(inputChan chan Message, updateChan chan Update) {
 	// because that could cause it to auto-lose interrupt it initiates. We won't send a command if waitingState is
 	// set.
 	waitingState := ""
-	// This value doesn't count down; it's set when an interrupt occurs and the bot resolves it when the
-	// StateDuration exceeds this value.
-	var interruptResolveTimer int
+	// This value doesn't count down; it's set when an interrupt occurs and the bot resolves it when it's been
+	// longer than this.
+	var interruptResolveTime time.Time
 	for update.Self.Life > 0 && update.Enemy.Life > 0 {
 		// Resolve interrupts after a while.
 		if strings.HasPrefix(update.Self.State, "interrupt") {
-			// If the interrupt just started, we need to decide how long to wait for and then stick with it.
+			// If the interrupt just started, set a new resolution time, so we don't insta-resolve the
+			// second interrupt.
 			if update.Self.StateDuration == 0 {
-				// From .5 to .75 seconds, since 1 cycle is a centisecond.
-				interruptResolveTimer = random.Intn(25) + 50
-			} else if -update.Self.StateDuration > interruptResolveTimer {
+				// From .5 to .75 seconds after now.
+				interruptResolveTime = time.Now().Add(
+					time.Duration(random.Intn(250)+500) * time.Second)
+			} else if time.Now().After(interruptResolveTime) {
 				inputChan <- Message{Username: "AttackBotSlow",
 					Content: "INTERRUPT_" + getInterruptKey(update.Self.State)}
 			}
