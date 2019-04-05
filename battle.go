@@ -15,21 +15,33 @@ type Player struct {
 	// These two channels are the same as the two from the corresponding User struct in server.go.
 	InputChan  chan Message
 	UpdateChan chan Update
-	// The Command field is the current input from the player (kept up to date by the concurrently running input func for the player).
+	// The Command field is the current input from the player (kept up to
+	// date by the concurrently running input func for the player).
 	Command string
 	Life    int
 	Stamina float32
-	// The State field keeps track of what the player is doing. It has values like "standing", "blocking", "light attack", etc.
+	// The State field keeps track of what the player is doing. It
+	// has values like "standing", "blocking", "light attack", etc.
 	State string
 	// The StateDuration field shows how much longer the player will remain in their current state.
 	StateDuration int
-	// The Finished field shows what state the player just exited. It's used to know when an attack is supposed to land.
+	// The Finished field shows what state the player just exited.
+	// It's used to know when an attack is supposed to land.
 	Finished string
 }
 
 // NewPlayer returns a Player with all the starting values.
 func NewPlayer(inputChan chan Message, updateChan chan Update) Player {
-	return Player{InputChan: inputChan, UpdateChan: updateChan, Command: "NONE", Life: 100, Stamina: 100, State: "standing", StateDuration: 0, Finished: ""}
+	return Player{
+		InputChan:     inputChan,
+		UpdateChan:    updateChan,
+		Command:       "NONE",
+		Life:          100,
+		Stamina:       100,
+		State:         "standing",
+		StateDuration: 0,
+		Finished:      "",
+	}
 }
 
 // Status returns a PlayerStatus from the Player, to be sent in an Update over the network.
@@ -38,14 +50,16 @@ func (p *Player) Status() PlayerStatus {
 
 }
 
-// This is called every mainloop cycle, and does two things: regenerate stamina, and make progress toward exiting the current state.
+// This is called every mainloop cycle, and does two things: regenerate stamina,
+// and make progress toward exiting the current state.
 func (p *Player) PassTime(amount int) {
 	p.Stamina += 0.1
 	if p.Stamina > 100 {
 		p.Stamina = 100
 	}
 	p.StateDuration -= amount
-	// If it starts with "interrupt", it's one of the heavy attack interrupt states. There are eight of them, so I didn't think it was practical to just list them all.
+	// If it starts with "interrupt", it's one of the heavy attack interrupt states.
+	// There are eight of them, so I didn't think it was practical to just list them all.
 	if p.StateDuration <= 0 && !TERMINAL_STATES[p.State] && !strings.HasPrefix(p.State, "interrupt") {
 		p.Finished = p.State
 		p.State = "standing"
@@ -57,7 +71,8 @@ func (p *Player) SetState(state string, duration int) {
 	p.StateDuration = duration
 }
 
-// This struct is passed instead of Player to the client in Updates so that unneeded fields like the channels aren't passed.
+// This struct is passed instead of Player to the client in Updates
+// so that unneeded fields like the channels aren't passed.
 type PlayerStatus struct {
 	Life          int     `json:"life"`
 	Stamina       float32 `json:"stamina"`
@@ -65,7 +80,8 @@ type PlayerStatus struct {
 	StateDuration int     `json:"stateDur"`
 }
 
-// One of these is sent back to each player every mainloop cycle. Note that the players don't know which player they are internally - it doesn't matter.
+// One of these is sent back to each player every mainloop cycle. Note that the
+// players don't know which player they are internally - it doesn't matter.
 type Update struct {
 	Self  PlayerStatus `json:"self"`
 	Enemy PlayerStatus `json:"enemy"`
@@ -78,7 +94,8 @@ const (
 	LIGHT_ATK_SPD      int     = 50
 	LIGHT_ATK_COST     float32 = 10.0
 	LIGHT_ATK_BLK_COST float32 = 12.0
-	// The counter window is how long you can counter for after the attacks starts - so a bigger value here means it's easier to counter.
+	// The counter window is how long you can counter for after the attacks
+	// starts - so a bigger value here means it's easier to counter.
 	LIGHT_ATK_CNTR_WINDOW int     = 25
 	LIGHT_ATK_CNTR_SPD    int     = 30
 	LIGHT_ATK_CNTR_DMG    int     = 3
@@ -95,15 +112,19 @@ var INTERRUPTABLE_STATES = map[string]bool{"standing": true, "blocking": true}
 var TERMINAL_STATES = map[string]bool{"standing": true, "blocking": true, "countered": true}
 var ATTACK_STATES = map[string]bool{"light attack": true, "heavy attack": true}
 
-// These are suffixes that can be attached to 'interrupted heavy' or 'interrupting heavy' to form the a state value that includes which arrow needs to be pressed.
+// These are suffixes that can be attached to 'interrupted heavy' or 'interrupting heavy'
+// to form the a state value that includes which arrow needs to be pressed.
 var INTERRUPT_RESOLVE_KEYS = []string{"_up", "_down", "_left", "_right"}
 
 func battle(player1inputChan, player2inputChan chan Message, player1updateChan, player2updateChan chan Update) {
 	// Seed the random number generator and initialize the clock and players.
 	random := rand.New(rand.NewSource(time.Now().UnixNano()))
-	ticker := time.NewTicker(10 * time.Millisecond)
+	ticker := time.NewTicker(100 * time.Millisecond)
 	defer ticker.Stop()
-	players := []Player{NewPlayer(player1inputChan, player1updateChan), NewPlayer(player2inputChan, player2updateChan)}
+	players := []Player{
+		NewPlayer(player1inputChan, player1updateChan),
+		NewPlayer(player2inputChan, player2updateChan),
+	}
 	for players[0].Life > 0 && players[1].Life > 0 {
 		select {
 		// Each mainloop cycle:
@@ -148,6 +169,7 @@ func battle(player1inputChan, player2inputChan chan Message, player1updateChan, 
 	stop2 <- true
 }
 
+// Called when a state finishes its duration (such as an attack landing).
 func resolveState(player, enemy Player) (Player, Player) {
 	switch player.Finished {
 	case "light attack":
@@ -200,6 +222,7 @@ func resolveState(player, enemy Player) (Player, Player) {
 	return player, enemy
 }
 
+// Called when a player command is received.
 func resolveCommand(player, enemy Player, random *rand.Rand) (Player, Player) {
 	// Interrupt resolution has to be handled first, otherwise non-arrow keys can't be punished.
 	if strings.HasPrefix(player.State, "interrupt") && player.Command != "NONE" {
