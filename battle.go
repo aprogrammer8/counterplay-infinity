@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018, Ryan Westlund.
+ * Copyright (c) 2018-2019, Ryan Westlund.
  * This code is under the BSD 3-Clause license.
  */
 
@@ -119,7 +119,7 @@ var INTERRUPT_RESOLVE_KEYS = []string{"_up", "_down", "_left", "_right"}
 func battle(player1inputChan, player2inputChan chan Message, player1updateChan, player2updateChan chan Update) {
 	// Seed the random number generator and initialize the clock and players.
 	random := rand.New(rand.NewSource(time.Now().UnixNano()))
-	ticker := time.NewTicker(100 * time.Millisecond)
+	ticker := time.NewTicker(10 * time.Millisecond)
 	defer ticker.Stop()
 	players := []Player{
 		NewPlayer(player1inputChan, player1updateChan),
@@ -227,7 +227,7 @@ func resolveCommand(player, enemy Player, random *rand.Rand) (Player, Player) {
 	// Interrupt resolution has to be handled first, otherwise non-arrow keys can't be punished.
 	if strings.HasPrefix(player.State, "interrupt") && player.Command != "NONE" {
 		// If we hit the right button (position 10 is just after the '_'):
-		if strings.HasPrefix(player.Command, "INTERRUPT_") && strings.ToLower(player.Command[10:]) == player.State[strings.Index(player.State, "_")+1:] {
+		if strings.HasPrefix(player.Command, "INTERRUPT_") && strings.ToLower(player.Command[10:]) == getInterruptKey(player.State) {
 			// If we're not the interrupting player, we're the heavy
 			// attack player, so the heavy attack hits.
 			if !strings.HasPrefix(player.State, "interrupting") {
@@ -306,4 +306,9 @@ func catchInput(channel chan Message, stopChan chan bool) {
 			return
 		}
 	}
+}
+
+// This function accepts an interrupt state and returns the key that must be pressed to resolve it favorably.
+func getInterruptKey(state string) string {
+	return state[strings.Index(state, "_")+1:]
 }

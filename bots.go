@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) 2018-2019, Ryan Westlund.
+ * This code is under the BSD 3-Clause license.
+ */
+
 // This file contains bots, which are functions spawned in goroutines for
 // each battle against them. They connect with channels just like a player.
 
@@ -5,6 +10,7 @@ package main
 
 import (
 	"math/rand"
+	"strings"
 	"time"
 )
 
@@ -33,7 +39,21 @@ func AttackBot(inputChan chan Message, updateChan chan Update) {
 	// because that could cause it to auto-lose interrupt it initiates. We won't send a command if waitingState is
 	// set.
 	waitingState := ""
+	// This value doesn't count down; it's set when an interrupt occurs and the bot resolves it when the
+	// StateDuration exceeds this value.
+	var interruptResolveTimer int
 	for update.Self.Life > 0 && update.Enemy.Life > 0 {
+		// Resolve interrupts after a while.
+		if strings.HasPrefix(update.Self.State, "interrupt") {
+			// If the interrupt just started, we need to decide how long to wait for and then stick with it.
+			if update.Self.StateDuration == 0 {
+				// From .5 to .75 seconds, since 1 cycle is a centisecond.
+				interruptResolveTimer = random.Intn(25) + 50
+			} else if -update.Self.StateDuration > interruptResolveTimer {
+				inputChan <- Message{Username: "AttackBot",
+					Content: "INTERRUPT_" + getInterruptKey(update.Self.State)}
+			}
+		}
 		// It doesn't do any attacks unless it has enough stamina for a heavy,
 		// because otherwise it would get stuck spamming light attacks at low stamina.
 		if INTERRUPTABLE_STATES[update.Self.State] && update.Self.Stamina >= HEAVY_ATK_COST && update.Self.State != waitingState {
@@ -44,7 +64,7 @@ func AttackBot(inputChan chan Message, updateChan chan Update) {
 			} else {
 				input = attacks[random.Intn(2)]
 			}
-			inputChan <- Message{Username: "AttackBot", Content: input, Command: ""}
+			inputChan <- Message{Username: "AttackBot", Content: input}
 			waitingState = update.Self.State
 		}
 		update = <-updateChan
@@ -68,10 +88,25 @@ func AttackBotSlow(inputChan chan Message, updateChan chan Update) {
 	// because that could cause it to auto-lose interrupt it initiates. We won't send a command if waitingState is
 	// set.
 	waitingState := ""
+	// This value doesn't count down; it's set when an interrupt occurs and the bot resolves it when the
+	// StateDuration exceeds this value.
+	var interruptResolveTimer int
 	for update.Self.Life > 0 && update.Enemy.Life > 0 {
+		// Resolve interrupts after a while.
+		if strings.HasPrefix(update.Self.State, "interrupt") {
+			// If the interrupt just started, we need to decide how long to wait for and then stick with it.
+			if update.Self.StateDuration == 0 {
+				// From .5 to .75 seconds, since 1 cycle is a centisecond.
+				interruptResolveTimer = random.Intn(25) + 50
+			} else if -update.Self.StateDuration > interruptResolveTimer {
+				inputChan <- Message{Username: "AttackBotSlow",
+					Content: "INTERRUPT_" + getInterruptKey(update.Self.State)}
+			}
+		}
 		// It doesn't do any attacks unless it has enough stamina for a heavy,
 		// because otherwise it would get stuck spamming light attacks at low stamina.
 		if INTERRUPTABLE_STATES[update.Self.State] && update.Self.Stamina >= HEAVY_ATK_COST && update.Self.State != waitingState {
+			// Don't send another command if we're still waiting for our state to change.
 			// Don't do light attacks into a prepared block.
 			if update.Enemy.State == "blocking" {
 				input = "HEAVY"
@@ -80,7 +115,8 @@ func AttackBotSlow(inputChan chan Message, updateChan chan Update) {
 			}
 			// Wait a small randomized delay before acting.
 			time.Sleep(time.Duration((200 + random.Intn(133))) * time.Millisecond)
-			inputChan <- Message{Username: "AttackBotSlow", Content: input, Command: ""}
+			inputChan <- Message{Username: "AttackBotSlow", Content: input}
+			waitingState = update.Self.State
 		}
 		update = <-updateChan
 		// If our state has changed, we can stop waiting and it's safe to send commands again.
