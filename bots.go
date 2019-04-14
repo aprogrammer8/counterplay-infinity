@@ -49,7 +49,7 @@ func AttackBot(inputChan chan Message, updateChan chan Update) {
 			if update.Self.StateDuration == 0 {
 				// From .5 to .75 seconds after now.
 				interruptResolveTime = time.Now().Add(
-					time.Duration(random.Intn(250)+500) * time.Second)
+					time.Duration(random.Intn(250)+500) * time.Millisecond)
 			} else if time.Now().After(interruptResolveTime) {
 				inputChan <- Message{Username: "AttackBot",
 					Content: "INTERRUPT_" + getInterruptKey(update.Self.State)}
@@ -100,7 +100,7 @@ func AttackBotSlow(inputChan chan Message, updateChan chan Update) {
 			if update.Self.StateDuration == 0 {
 				// From .5 to .75 seconds after now.
 				interruptResolveTime = time.Now().Add(
-					time.Duration(random.Intn(250)+500) * time.Second)
+					time.Duration(random.Intn(250)+500) * time.Millisecond)
 			} else if time.Now().After(interruptResolveTime) {
 				inputChan <- Message{Username: "AttackBotSlow",
 					Content: "INTERRUPT_" + getInterruptKey(update.Self.State)}
