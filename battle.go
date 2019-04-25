@@ -89,23 +89,23 @@ type Update struct {
 
 // Balance parameters.
 const (
-	LIGHT_ATK_DMG int = 3
-	// 'Speed' here actually means how long it takes, so it's misleading.
-	LIGHT_ATK_SPD      int     = 50
+	LIGHT_ATK_DMG      int     = 3
+	LIGHT_ATK_TIME     int     = 50
 	LIGHT_ATK_COST     float32 = 10.0
 	LIGHT_ATK_BLK_COST float32 = 12.0
 	// The counter window is how long you can counter for after the attacks
 	// starts - so a bigger value here means it's easier to counter.
 	LIGHT_ATK_CNTR_WINDOW int     = 25
-	LIGHT_ATK_CNTR_SPD    int     = 30
+	LIGHT_ATK_CNTR_TIME   int     = 30
 	LIGHT_ATK_CNTR_DMG    int     = 3
+	SAVE_COST             float32 = 4.0
 	HEAVY_ATK_DMG         int     = 6
-	HEAVY_ATK_SPD         int     = 100
+	HEAVY_ATK_TIME        int     = 100
 	HEAVY_ATK_COST        float32 = 15.0
 	HEAVY_ATK_BLK_COST    float32 = 20.0
 	HEAVY_ATK_BLKED_DMG   int     = 2
 	DODGE_COST            float32 = 20.0
-	DODGE_SPD             int     = 30
+	DODGE_WINDOW          int     = 30
 )
 
 var INTERRUPTABLE_STATES = map[string]bool{"standing": true, "blocking": true}
@@ -177,11 +177,11 @@ func resolveState(player, enemy Player) (Player, Player) {
 			if enemy.Stamina >= LIGHT_ATK_BLK_COST {
 				enemy.Stamina -= LIGHT_ATK_BLK_COST
 				// If the enemy blocked inside the counterattack window...
-				if -enemy.StateDuration >= LIGHT_ATK_SPD-LIGHT_ATK_CNTR_WINDOW {
+				if -enemy.StateDuration >= LIGHT_ATK_TIME-LIGHT_ATK_CNTR_WINDOW {
 					// The player is counterattacked. They are placed in a stunned state that they
 					// must press a button to escape before the counterattack lands.
 					player.SetState("countered", 0)
-					enemy.SetState("counterattack", LIGHT_ATK_CNTR_SPD)
+					enemy.SetState("counterattack", LIGHT_ATK_CNTR_TIME)
 				}
 			} else {
 				// If you try to block an attack but you don't have enough stamina,
@@ -261,7 +261,7 @@ func resolveCommand(player, enemy Player, random *rand.Rand) (Player, Player) {
 		}
 	case "DODGE":
 		// Dodges take time, unlike blocks which can be started at the last second.
-		if INTERRUPTABLE_STATES[player.State] && player.Stamina >= DODGE_COST && enemy.StateDuration > DODGE_SPD {
+		if INTERRUPTABLE_STATES[player.State] && player.Stamina >= DODGE_COST && enemy.StateDuration > DODGE_WINDOW {
 			player.Stamina -= DODGE_COST
 			if ATTACK_STATES[enemy.State] {
 				enemy.SetState("standing", 0)
@@ -276,18 +276,18 @@ func resolveCommand(player, enemy Player, random *rand.Rand) (Player, Player) {
 		if INTERRUPTABLE_STATES[player.State] && player.Stamina >= LIGHT_ATK_COST {
 			player.Stamina -= LIGHT_ATK_COST
 			// If the attack is going to interrupt a heavy attack, enter the interrupt mode.
-			if enemy.State == "heavy attack" && enemy.StateDuration > LIGHT_ATK_SPD {
+			if enemy.State == "heavy attack" && enemy.StateDuration > LIGHT_ATK_TIME {
 				key := INTERRUPT_RESOLVE_KEYS[random.Intn(4)]
 				player.SetState("interrupting heavy"+key, 0)
 				enemy.SetState("interrupted heavy"+key, 0)
 				enemy.Life -= LIGHT_ATK_DMG
 			} else {
-				player.SetState("light attack", LIGHT_ATK_SPD)
+				player.SetState("light attack", LIGHT_ATK_TIME)
 			}
 		}
 	case "HEAVY":
 		if INTERRUPTABLE_STATES[player.State] && player.Stamina >= HEAVY_ATK_COST {
-			player.SetState("heavy attack", HEAVY_ATK_SPD)
+			player.SetState("heavy attack", HEAVY_ATK_TIME)
 			player.Stamina -= HEAVY_ATK_COST
 		}
 	}
