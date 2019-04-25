@@ -268,7 +268,8 @@ func resolveCommand(player, enemy Player, random *rand.Rand) (Player, Player) {
 			}
 		}
 	case "SAVE":
-		if player.State == "countered" {
+		if player.State == "countered" && player.Stamina >= SAVE_COST {
+			player.Stamina -= SAVE_COST
 			player.SetState("standing", 0)
 			enemy.SetState("standing", 0)
 		}

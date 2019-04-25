@@ -23,7 +23,7 @@ The Stats
 - Both players start with 100 life and 100 stamina.
 - Stamina regenerates by 0.1 points per mainloop cycle (which is 1 centisecond).
 - Light attack: deals 3 damage, costs 10 stamina, takes 50 cycles to land, and costs 12 stamina to block.
-- Counterattack: deals 3 damage, cost no stamina (besides the block), takes 30 cycles to land, and costs nothing to save against.
+- Counterattack: deals 3 damage, cost no stamina (besides the block), takes 30 cycles to land, and costs 4 stamina to save against.
 - Heavy attack: deals 6 damage, costs 15 stamina, takes 100 cycles to land, costs 20 stamina to block, and deals 2 damage if blocked.
 - Dodge: costs 20 stamina, takes 30 cycles.
 
