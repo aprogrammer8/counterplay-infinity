@@ -40,7 +40,7 @@ function handleChatMessage(msg) {
 		document.getElementById('chat').style.display = "none";
 		document.getElementById('battleUI').style.display = "block";
 		document.getElementById("getReadyText").style.display = "block";
-		// Stupid hack with reverse casading timers to show a countdown.
+		// Stupid hack with reverse cascading timers to show a countdown.
 		setTimeout(function(){
 			setTimeout(function(){
 				setTimeout(function(){
