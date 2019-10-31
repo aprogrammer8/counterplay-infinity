@@ -15,6 +15,12 @@
 			"revisionTime": "2018-06-05T20:25:52Z"
 		},
 		{
+			"checksumSHA1": "I7hloldMJZTqUx6hbVDp5nk9fZQ=",
+			"path": "github.com/pkg/errors",
+			"revision": "27936f6d90f9c8e1145f11ed52ffffbfdb9e0af7",
+			"revisionTime": "2019-02-27T00:00:51Z"
+		},
+		{
 			"checksumSHA1": "LuFv4/jlrmFNnDb/5SCSEPAM9vU=",
 			"path": "github.com/pmezard/go-difflib/difflib",
 			"revision": "792786c7400a136282c1664665ae0a8db921c6c2",
@@ -51,5 +57,5 @@
 			"revisionTime": "2018-05-06T18:05:49Z"
 		}
 	],
-	"rootPath": "github.com/aprogrammer8/counterplay_infinity"
+	"rootPath": "github.com/yujiri8/counterplay-infinity"
 }

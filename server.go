@@ -10,6 +10,7 @@ import (
 	"net/http"
 
 	"github.com/gorilla/websocket"
+	"github.com/pkg/errors"
 )
 
 // Message is the JSON object used for most communication between clients and the server. In the case of a chat message,
@@ -182,7 +183,7 @@ func handleConnection(newClients chan<- ConnInfo) http.Handler {
 		var upgrader = websocket.Upgrader{}
 		socket, err := upgrader.Upgrade(w, r, nil)
 		if err != nil {
-			log.Fatal(err)
+			log.Println(errors.Wrap(err, "when upgrading connection"))
 		}
 		defer socket.Close()
 		// Send the connection info.
@@ -201,7 +202,7 @@ func handleConnection(newClients chan<- ConnInfo) http.Handler {
 			for msg := range conn.Outbound {
 				err := socket.WriteJSON(msg)
 				if err != nil {
-					log.Println(err)
+					log.Println(errors.Wrap(err, "when writing chat message"))
 				}
 				//TODO remove them or just drop the message?
 			}
@@ -213,7 +214,7 @@ func handleConnection(newClients chan<- ConnInfo) http.Handler {
 			// Read the next message from chat
 			err := socket.ReadJSON(&msg)
 			if err != nil {
-				log.Printf("error: %v", err)
+				log.Println(errors.Wrap(err, "when reading chat message"))
 				return
 			}
 			conn.Inbound <- msg
@@ -230,7 +231,7 @@ func forwardUpdates(dest chan interface{}, src chan Update) {
 			// recover from panic caused by writing to a closed channel
 			r := recover()
 			if r != nil {
-				log.Printf("write: error writing on channel: %v\n", r)
+				log.Printf("error when writing on channel: %v\n", r)
 				return
 			}
 		}()
